@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="hero text-center">
+    <h2>Parent Visitor Log Book</h2>
+    <p class="lead">Track parent visits and the students they came to meet.</p>
+    <a href="/signin" class="btn btn-light btn-lg mt-2">+ Sign In a Parent Visitor</a>
+</div>
+
+{% if visitors %}
+<h5 class="mb-3">All Parent Visitors ({{ visitors|length }})</h5>
+<div class="table-responsive">
+    <table class="table table-bordered table-hover bg-white shadow-sm rounded">
+        <thead class="table-dark">
+            <tr>
+                <th>#</th>
+                <th>Parent Name</th>
+                <th>Phone</th>
+                <th>Purpose</th>
+                <th>Student Name</th>
+                <th>Roll No</th>
+                <th>Branch</th>
+                <th>Admission Year</th>
+                <th>Section</th>
+                <th>Sign In</th>
+                <th>Sign Out</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for v in visitors %}
+            <tr>
+                <td>{{ v.id }}</td>
+                <td>{{ v.name }}</td>
+                <td>{{ v.phone }}</td>
+                <td>{{ v.purpose }}</td>
+                <td>{{ v.student_name }}</td>
+                <td>{{ v.roll_no }}</td>
+                <td>{{ v.roll_details.branch_code if v.roll_details else "-" }}</td>
+                <td>{{ v.roll_details.admission_year if v.roll_details else "-" }}</td>
+                <td>{{ v.roll_details.section if v.roll_details else "-" }}</td>
+                <td>{{ v.sign_in }}</td>
+                <td>
+                    {% if v.sign_out %}
+                        <span class="badge bg-secondary">{{ v.sign_out }}</span>
+                    {% else %}
+                        <span class="badge bg-success">Still Inside</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if not v.sign_out %}
+                        <a href="/signout/{{ v.id }}" class="btn btn-sm btn-outline-danger"
+                           onclick="return confirm('Mark this parent visitor as signed out?')">Sign Out</a>
+                    {% else %}
+                        <span class="text-muted small">Done</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="text-center text-muted mt-5">
+    <h5>No parent visitors recorded yet.</h5>
+    <p><a href="/signin">Sign in the first parent visitor</a></p>
+</div>
+{% endif %}
+
+{% endblock %}
