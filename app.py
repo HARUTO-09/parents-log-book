@@ -13,6 +13,11 @@ BRANCH_NAMES = {
     "CCE": "Computer and Communication Engineering",
     "AID": "Artificial Intelligence and Data Science",
 }
+SECTION_NAMES = {
+    "0": "A",
+    "1": "B",
+    "2": "C",
+}
 
 def get_db():
     conn = sqlite3.connect("visitors.db")
