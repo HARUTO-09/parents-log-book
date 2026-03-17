@@ -13,7 +13,7 @@ A simple web app to sign in and sign out school visitors, built with Flask, Boot
 
 1. **Clone the repo**
    ```
-   git clone <your-repo-url>
+   git clone https://github.com/HARUTO-09/parents-log-book
    cd visitor_log
    ```
 
