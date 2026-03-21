@@ -1,58 +1,66 @@
 {% extends "base.html" %}
+{% block title %}Sign In Parent{% endblock %}
 {% block content %}
 
 <div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card p-4 shadow-sm">
+    <div class="col-xl-7 col-lg-8">
+        <section class="hero mb-4">
+            <p class="eyebrow mb-2">New Entry</p>
+            <h2 class="mb-2">Register a parent visit</h2>
+            <p class="lead mb-0">Add the visit details below. Roll number validation will automatically identify the branch, year, and section.</p>
+        </section>
+
+        <div class="card p-4 shadow-sm form-card">
             <h4 class="mb-4">Parent Visitor Sign In</h4>
 
             <div class="alert alert-danger d-none" id="formError">
-                Please fill in all required fields.
+                Please correct the highlighted fields before submitting.
             </div>
 
-            <form method="POST" action="/signin" id="visitorForm">
-
-                <div class="mb-3">
-                    <label class="form-label">Parent Name <span class="text-danger">*</span></label>
-                    <input type="text" name="name" class="form-control" placeholder="e.g. Ramesh Kumar" required>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Phone Number <span class="text-danger">*</span></label>
-                    <input type="text" name="phone" id="phone" class="form-control" placeholder="e.g. 9876543210" required>
-                    <div class="invalid-feedback">Enter a valid 10-digit phone number.</div>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Purpose of Visit <span class="text-danger">*</span></label>
-                    <select name="purpose" class="form-select" required>
-                        <option value="">-- Select Purpose --</option>
-                        <option value="Parent Meeting">Parent Meeting</option>
-                        <option value="Fee Enquiry">Fee Enquiry</option>
-                        <option value="Academic Discussion">Academic Discussion</option>
-                        <option value="Leave Request">Leave Request</option>
-                        <option value="Other">Other</option>
-                    </select>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Student Name <span class="text-danger">*</span></label>
-                    <input type="text" name="student_name" class="form-control" placeholder="e.g. Sai Teja" required>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Student Roll No <span class="text-danger">*</span></label>
-                    <input type="text" name="roll_no" id="rollNo" class="form-control" placeholder="e.g. AIE23150" required>
-                    <div class="form-text">
-                        Use format like AIE23150, CSE23001, CCE24005, or AID23140.
+            <form method="POST" action="{{ url_for('signin') }}" id="visitorForm" novalidate>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Parent Name <span class="text-danger">*</span></label>
+                        <input type="text" name="name" class="form-control" placeholder="e.g. Ramesh Kumar" required>
                     </div>
-                    <div class="invalid-feedback">
-                        Enter a valid roll number in the format AIE23150, CSE23001, CCE24005, or AID23140.
+
+                    <div class="col-md-6">
+                        <label class="form-label">Phone Number <span class="text-danger">*</span></label>
+                        <input type="text" name="phone" id="phone" class="form-control" placeholder="e.g. 9876543210" required>
+                        <div class="invalid-feedback">Enter a valid 10-digit phone number.</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Purpose of Visit <span class="text-danger">*</span></label>
+                        <select name="purpose" class="form-select" required>
+                            <option value="">-- Select Purpose --</option>
+                            {% for purpose in purpose_options %}
+                                <option value="{{ purpose }}">{{ purpose }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Student Name <span class="text-danger">*</span></label>
+                        <input type="text" name="student_name" class="form-control" placeholder="e.g. Sai Teja" required>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Student Roll No <span class="text-danger">*</span></label>
+                        <input type="text" name="roll_no" id="rollNo" class="form-control" placeholder="e.g. AIE23150" required>
+                        <div class="form-text">
+                            Use formats like AIE23150, CSE23001, CCE24005, or AID23140.
+                        </div>
+                        <div class="invalid-feedback">
+                            Enter a valid roll number in the format AIE23150, CSE23001, CCE24005, or AID23140.
+                        </div>
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-dark w-100">Sign In</button>
-                <a href="/" class="btn btn-outline-secondary w-100 mt-2">Cancel</a>
+                <div class="d-flex flex-wrap gap-2 mt-4">
+                    <button type="submit" class="btn btn-dark">Save Visit</button>
+                    <a href="{{ url_for('visitor_log') }}" class="btn btn-outline-secondary">Back to Log</a>
+                </div>
             </form>
         </div>
     </div>
