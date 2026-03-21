@@ -7,7 +7,7 @@
         <section class="hero mb-4">
             <p class="eyebrow mb-2">New Entry</p>
             <h2 class="mb-2">Register a parent visit</h2>
-            <p class="lead mb-0">Add the visit details below. Roll number validation will automatically identify the branch, year, and section.</p>
+            <p class="lead mb-0">Add the visit details below. For Admission Enquiry, the student fields are not required.</p>
         </section>
 
         <div class="card p-4 shadow-sm form-card">
@@ -32,7 +32,7 @@
 
                     <div class="col-md-6">
                         <label class="form-label">Purpose of Visit <span class="text-danger">*</span></label>
-                        <select name="purpose" class="form-select" required>
+                        <select name="purpose" id="purpose" class="form-select" required>
                             <option value="">-- Select Purpose --</option>
                             {% for purpose in purpose_options %}
                                 <option value="{{ purpose }}">{{ purpose }}</option>
@@ -40,16 +40,33 @@
                         </select>
                     </div>
 
-                    <div class="col-md-6">
+                    <div class="col-md-6 student-field">
                         <label class="form-label">Student Name <span class="text-danger">*</span></label>
-                        <input type="text" name="student_name" class="form-control" placeholder="e.g. Sai Teja" required>
+                        <input
+                            type="text"
+                            name="student_name"
+                            id="studentName"
+                            class="form-control"
+                            placeholder="e.g. Sai Teja"
+                            data-student-required="true"
+                            required
+                        >
+                        <div class="form-text">Skip this for admission enquiries.</div>
                     </div>
 
-                    <div class="col-12">
+                    <div class="col-12 student-field" id="studentRollField">
                         <label class="form-label">Student Roll No <span class="text-danger">*</span></label>
-                        <input type="text" name="roll_no" id="rollNo" class="form-control" placeholder="e.g. AIE23150" required>
+                        <input
+                            type="text"
+                            name="roll_no"
+                            id="rollNo"
+                            class="form-control"
+                            placeholder="e.g. AIE23150"
+                            data-student-required="true"
+                            required
+                        >
                         <div class="form-text">
-                            Use formats like AIE23150, CSE23001, CCE24005, or AID23140.
+                            Use formats like AIE23150, CSE23001, CCE24005, or AID23140. This is not needed for admission enquiries.
                         </div>
                         <div class="invalid-feedback">
                             Enter a valid roll number in the format AIE23150, CSE23001, CCE24005, or AID23140.

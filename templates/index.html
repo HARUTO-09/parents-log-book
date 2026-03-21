@@ -107,18 +107,23 @@
                             <div class="text-muted small">{{ v.visit_status }}</div>
                         </td>
                         <td>{{ v.phone }}</td>
-                        <td>{{ v.purpose }}</td>
-                        <td>{{ v.student_name }}</td>
-                        <td>{{ v.roll_no }}</td>
+                        <td>
+                            {{ v.purpose }}
+                            {% if v.purpose == "Admission Enquiry" %}
+                                <div class="small text-muted">No current student linked</div>
+                            {% endif %}
+                        </td>
+                        <td>{{ v.student_display }}</td>
+                        <td>{{ v.roll_display }}</td>
                         <td>
                             {% if v.roll_details %}
                                 <div class="fw-semibold">{{ v.roll_details.branch_code }}</div>
                                 <div class="text-muted small">{{ v.roll_details.admission_year }}</div>
                             {% else %}
-                                -
+                                {{ "Not Required" if v.purpose == "Admission Enquiry" else "-" }}
                             {% endif %}
                         </td>
-                        <td>{{ v.roll_details.section if v.roll_details else "-" }}</td>
+                        <td>{{ v.roll_details.section if v.roll_details else ("Not Required" if v.purpose == "Admission Enquiry" else "-") }}</td>
                         <td>{{ v.sign_in }}</td>
                         <td>
                             {% if v.sign_out %}
