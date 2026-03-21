@@ -28,8 +28,10 @@ app.config["DATABASE_PATH"] = os.environ.get("DATABASE_PATH", "visitors.db")
 TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M"
 PHONE_PATTERN = re.compile(r"^\d{10}$")
 ROLL_NO_PATTERN = re.compile(r"^(AIE|CSE|CCE|AID)(23|24|25)(\d{3})$")
+ADMISSION_ENQUIRY_PURPOSE = "Admission Enquiry"
 PURPOSE_OPTIONS = [
     "Parent Meeting",
+    ADMISSION_ENQUIRY_PURPOSE,
     "Fee Enquiry",
     "Academic Discussion",
     "Leave Request",
@@ -77,6 +79,28 @@ def parse_roll_no(roll_no):
     }
 
 
+def requires_student_details(purpose):
+    return (purpose or "").strip() != ADMISSION_ENQUIRY_PURPOSE
+
+
+def get_student_display(visitor):
+    student_name = (visitor.get("student_name") or "").strip()
+    if student_name:
+        return student_name
+    if requires_student_details(visitor.get("purpose")):
+        return "-"
+    return "Not Required"
+
+
+def get_roll_display(visitor):
+    roll_no = (visitor.get("roll_no") or "").strip()
+    if roll_no:
+        return roll_no
+    if requires_student_details(visitor.get("purpose")):
+        return "-"
+    return "Not Required"
+
+
 def parse_timestamp(value):
     if not value:
         return None
@@ -112,6 +136,8 @@ def format_visit_duration(sign_in, sign_out):
 def enrich_visitor_row(row):
     visitor = dict(row)
     visitor["roll_details"] = parse_roll_no(visitor["roll_no"])
+    visitor["student_display"] = get_student_display(visitor)
+    visitor["roll_display"] = get_roll_display(visitor)
     visitor["visit_status"] = "Inside" if not visitor["sign_out"] else "Completed"
     visitor["visit_duration"] = (
         "In Progress" if not visitor["sign_out"] else format_visit_duration(visitor["sign_in"], visitor["sign_out"])
@@ -442,17 +468,24 @@ def export_visitors():
 
     for visitor in visitors:
         roll_details = visitor["roll_details"] or {}
+        branch_display = roll_details.get("branch_name")
+        admission_year_display = roll_details.get("admission_year")
+        section_display = roll_details.get("section")
+        if not roll_details and not requires_student_details(visitor["purpose"]):
+            branch_display = "Not Required"
+            admission_year_display = "Not Required"
+            section_display = "Not Required"
         writer.writerow(
             [
                 visitor["id"],
                 visitor["name"],
                 visitor["phone"],
                 visitor["purpose"],
-                visitor["student_name"],
-                visitor["roll_no"],
-                roll_details.get("branch_name", "-"),
-                roll_details.get("admission_year", "-"),
-                roll_details.get("section", "-"),
+                visitor["student_display"],
+                visitor["roll_display"],
+                branch_display or "-",
+                admission_year_display or "-",
+                section_display or "-",
                 visitor["sign_in"],
                 visitor["sign_out"] or "-",
                 visitor["visit_status"],
@@ -478,35 +511,59 @@ def signin():
         purpose = (request.form.get("purpose") or "").strip()
         student_name = (request.form.get("student_name") or "").strip()
         roll_no = (request.form.get("roll_no") or "").strip().upper()
+        needs_student_details = requires_student_details(purpose)
 
-        if not all([name, phone, purpose, student_name, roll_no]):
+        if not all([name, phone, purpose]):
             flash("Please fill in all fields.", "danger")
+            return redirect(url_for("signin"))
+        if purpose not in PURPOSE_OPTIONS:
+            flash("Please select a valid visit purpose.", "danger")
             return redirect(url_for("signin"))
         if not PHONE_PATTERN.fullmatch(phone):
             flash("Enter a valid 10-digit phone number.", "danger")
             return redirect(url_for("signin"))
-
-        roll_details = parse_roll_no(roll_no)
-        if roll_details is None:
-            flash(
-                "Enter a valid student roll number like AIE23150, CSE23001, CCE24005, or AID23140.",
-                "danger",
-            )
+        if needs_student_details and not all([student_name, roll_no]):
+            flash("Please provide student name and roll number for this visit.", "danger")
             return redirect(url_for("signin"))
+
+        roll_details = None
+        normalized_roll_no = ""
+        if needs_student_details:
+            roll_details = parse_roll_no(roll_no)
+            if roll_details is None:
+                flash(
+                    "Enter a valid student roll number like AIE23150, CSE23001, CCE24005, or AID23140.",
+                    "danger",
+                )
+                return redirect(url_for("signin"))
+            normalized_roll_no = roll_details["normalized"]
 
         conn = get_db()
         columns = get_visitor_columns(conn)
-        active_duplicate = conn.execute(
-            """
-            SELECT id
-            FROM visitors
-            WHERE phone = ?
-              AND roll_no = ?
-              AND (sign_out IS NULL OR sign_out = '')
-            LIMIT 1
-            """,
-            (phone, roll_details["normalized"]),
-        ).fetchone()
+        if needs_student_details:
+            active_duplicate = conn.execute(
+                """
+                SELECT id
+                FROM visitors
+                WHERE phone = ?
+                  AND roll_no = ?
+                  AND (sign_out IS NULL OR sign_out = '')
+                LIMIT 1
+                """,
+                (phone, normalized_roll_no),
+            ).fetchone()
+        else:
+            active_duplicate = conn.execute(
+                """
+                SELECT id
+                FROM visitors
+                WHERE phone = ?
+                  AND purpose = ?
+                  AND (sign_out IS NULL OR sign_out = '')
+                LIMIT 1
+                """,
+                (phone, purpose),
+            ).fetchone()
         if active_duplicate:
             conn.close()
             flash("This parent already has an active visit entry.", "warning")
@@ -521,7 +578,7 @@ def signin():
                     name, phone, purpose, whom_to_meet, student_name, roll_no, sign_in
                 ) VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
-                (name, phone, purpose, student_name, student_name, roll_details["normalized"], sign_in_time),
+                (name, phone, purpose, student_name, student_name, normalized_roll_no, sign_in_time),
             )
         else:
             conn.execute(
@@ -529,7 +586,7 @@ def signin():
                 INSERT INTO visitors (name, phone, purpose, student_name, roll_no, sign_in)
                 VALUES (?, ?, ?, ?, ?, ?)
                 """,
-                (name, phone, purpose, student_name, roll_details["normalized"], sign_in_time),
+                (name, phone, purpose, student_name, normalized_roll_no, sign_in_time),
             )
 
         conn.commit()
