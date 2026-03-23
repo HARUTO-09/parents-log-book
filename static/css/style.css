@@ -29,6 +29,49 @@ body {
     color: #f8fbff;
 }
 
+.brand-lockup {
+    align-items: center;
+    display: inline-flex;
+    gap: 0.9rem;
+    text-decoration: none;
+}
+
+.brand-logo-wrap {
+    align-items: center;
+    border-radius: 16px;
+    display: inline-flex;
+    justify-content: center;
+    min-height: 56px;
+    min-width: 88px;
+    padding: 0.5rem 0.75rem;
+}
+
+.brand-logo {
+    display: block;
+    height: auto;
+    max-height: 34px;
+    width: 100%;
+}
+
+.brand-copy {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+}
+
+.brand-title {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.brand-subtitle {
+    color: rgba(248, 251, 255, 0.72);
+    font-size: 0.74rem;
+    letter-spacing: 0.08em;
+    margin-top: 0.15rem;
+    text-transform: uppercase;
+}
+
 .admin-nav .nav-link:hover,
 .admin-nav .navbar-brand:hover {
     color: #ffffff;
@@ -204,12 +247,34 @@ footer {
         padding: 1.5rem;
     }
 
+    .brand-title {
+        font-size: 0.95rem;
+    }
+
     .nav-user {
         padding: 0.25rem 0;
     }
 }
 
 @media (max-width: 767.98px) {
+    .brand-lockup {
+        gap: 0.7rem;
+    }
+
+    .brand-logo-wrap {
+        min-height: 50px;
+        min-width: 78px;
+        padding: 0.45rem 0.65rem;
+    }
+
+    .brand-logo {
+        max-height: 30px;
+    }
+
+    .brand-subtitle {
+        display: none;
+    }
+
     .stat-value {
         font-size: 1.75rem;
     }
