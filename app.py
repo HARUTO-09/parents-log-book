@@ -83,6 +83,9 @@ SECTION_NAMES = {
 
 
 def get_db():
+    database_dir = os.path.dirname(os.path.abspath(app.config["DATABASE_PATH"]))
+    if database_dir:
+        os.makedirs(database_dir, exist_ok=True)
     conn = sqlite3.connect(app.config["DATABASE_PATH"])
     conn.row_factory = sqlite3.Row
     return conn
