@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Sign In Parent{% endblock %}
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-xl-7 col-lg-8">
+        <section class="hero mb-4">
+            <p class="eyebrow mb-2">New Entry</p>
+            <h2 class="mb-2">Register a parent visit</h2>
+            <p class="lead mb-0">Add the visit details below. For Admission Enquiry, the student fields are not required.</p>
+        </section>
+
+        <div class="card p-4 shadow-sm form-card">
+            <h4 class="mb-4">Parent Visitor Sign In</h4>
+
+            <div class="alert alert-danger d-none" id="formError">
+                Please correct the highlighted fields before submitting.
+            </div>
+
+            <form method="POST" action="{{ url_for('signin') }}" id="visitorForm" novalidate>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Parent Name <span class="text-danger">*</span></label>
+                        <input type="text" name="name" class="form-control" placeholder="e.g. Ramesh Kumar" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Phone Number <span class="text-danger">*</span></label>
+                        <input type="text" name="phone" id="phone" class="form-control" placeholder="e.g. 9876543210" required>
+                        <div class="invalid-feedback">Enter a valid 10-digit phone number.</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Purpose of Visit <span class="text-danger">*</span></label>
+                        <select name="purpose" id="purpose" class="form-select" required>
+                            <option value="">-- Select Purpose --</option>
+                            {% for purpose in purpose_options %}
+                                <option value="{{ purpose }}">{{ purpose }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-6 student-field">
+                        <label class="form-label">Student Name <span class="text-danger">*</span></label>
+                        <input
+                            type="text"
+                            name="student_name"
+                            id="studentName"
+                            class="form-control"
+                            placeholder="e.g. Sai Teja"
+                            data-student-required="true"
+                            required
+                        >
+                        <div class="form-text">Skip this for admission enquiries.</div>
+                    </div>
+
+                    <div class="col-12 student-field" id="studentRollField">
+                        <label class="form-label">Student Roll No <span class="text-danger">*</span></label>
+                        <input
+                            type="text"
+                            name="roll_no"
+                            id="rollNo"
+                            class="form-control"
+                            placeholder="e.g. AIE23150"
+                            data-student-required="true"
+                            required
+                        >
+                        <div class="form-text">
+                            Use formats like AIE23150, CSE23001, CCE24005, or AID23140. This is not needed for admission enquiries.
+                        </div>
+                        <div class="invalid-feedback">
+                            Enter a valid roll number in the format AIE23150, CSE23001, CCE24005, or AID23140.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2 mt-4">
+                    <button type="submit" class="btn btn-dark">Save Visit</button>
+                    <a href="{{ url_for('visitor_log') }}" class="btn btn-outline-secondary">Back to Log</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

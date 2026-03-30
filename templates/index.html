@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% block title %}Visitor Log{% endblock %}
+{% block content %}
+
+<section class="hero mb-4">
+    <div class="d-lg-flex justify-content-between align-items-center gap-3">
+        <div>
+            <p class="eyebrow mb-2">Visitor Records</p>
+            <h2 class="mb-2">Track, filter, and manage parent visits</h2>
+            <p class="lead mb-0">Use the search tools below to find active visits quickly and export reports when needed.</p>
+        </div>
+        <div class="hero-actions mt-3 mt-lg-0">
+            <a href="{{ url_for('signin') }}" class="btn btn-light btn-lg">+ Sign In Parent</a>
+        </div>
+    </div>
+</section>
+
+<div class="card filter-card shadow-sm mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <div>
+                <h5 class="mb-1">Search and Filters</h5>
+                <p class="text-muted mb-0">Showing {{ visitors|length }} visitor record{{ '' if visitors|length == 1 else 's' }}.</p>
+            </div>
+            {% if active_filter_count %}
+                <span class="badge text-bg-dark">Active filters: {{ active_filter_count }}</span>
+            {% endif %}
+        </div>
+
+        <form method="GET" action="{{ url_for('visitor_log') }}" class="row g-3">
+            <div class="col-lg-4">
+                <label class="form-label">Search</label>
+                <input
+                    type="text"
+                    name="search"
+                    class="form-control"
+                    value="{{ filters.search }}"
+                    placeholder="Parent, phone, student, or roll number"
+                >
+            </div>
+            <div class="col-md-6 col-lg-2">
+                <label class="form-label">Purpose</label>
+                <select name="purpose" class="form-select">
+                    <option value="">All</option>
+                    {% for purpose in purpose_options %}
+                        <option value="{{ purpose }}" {% if filters.purpose == purpose %}selected{% endif %}>{{ purpose }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6 col-lg-2">
+                <label class="form-label">Branch</label>
+                <select name="branch" class="form-select">
+                    <option value="">All</option>
+                    {% for branch_code, branch_name in branch_names.items() %}
+                        <option value="{{ branch_code }}" {% if filters.branch == branch_code %}selected{% endif %}>
+                            {{ branch_code }} - {{ branch_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6 col-lg-2">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All</option>
+                    <option value="active" {% if filters.status == 'active' %}selected{% endif %}>Still Inside</option>
+                    <option value="completed" {% if filters.status == 'completed' %}selected{% endif %}>Signed Out</option>
+                </select>
+            </div>
+            <div class="col-md-6 col-lg-2">
+                <label class="form-label">Visit Date</label>
+                <input type="date" name="visit_date" class="form-control" value="{{ filters.visit_date }}">
+            </div>
+            <div class="col-12 d-flex flex-wrap gap-2">
+                <button type="submit" class="btn btn-dark">Apply Filters</button>
+                <a href="{{ url_for('visitor_log') }}" class="btn btn-outline-secondary">Clear</a>
+                <a href="{{ export_url }}" class="btn btn-outline-primary">Export CSV</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if visitors %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle bg-white shadow-sm rounded">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Parent</th>
+                    <th>Phone</th>
+                    <th>Purpose</th>
+                    <th>Student</th>
+                    <th>Roll No</th>
+                    <th>Branch</th>
+                    <th>Section</th>
+                    <th>Sign In</th>
+                    <th>Status</th>
+                    <th>Duration</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for v in visitors %}
+                    <tr>
+                        <td>{{ v.id }}</td>
+                        <td>
+                            <div class="fw-semibold">{{ v.name }}</div>
+                            <div class="text-muted small">{{ v.visit_status }}</div>
+                        </td>
+                        <td>{{ v.phone }}</td>
+                        <td>
+                            {{ v.purpose }}
+                            {% if v.purpose == "Admission Enquiry" %}
+                                <div class="small text-muted">No current student linked</div>
+                            {% endif %}
+                        </td>
+                        <td>{{ v.student_display }}</td>
+                        <td>{{ v.roll_display }}</td>
+                        <td>
+                            {% if v.roll_details %}
+                                <div class="fw-semibold">{{ v.roll_details.branch_code }}</div>
+                                <div class="text-muted small">{{ v.roll_details.admission_year }}</div>
+                            {% else %}
+                                {{ "Not Required" if v.purpose == "Admission Enquiry" else "-" }}
+                            {% endif %}
+                        </td>
+                        <td>{{ v.roll_details.section if v.roll_details else ("Not Required" if v.purpose == "Admission Enquiry" else "-") }}</td>
+                        <td>{{ v.sign_in }}</td>
+                        <td>
+                            {% if v.sign_out %}
+                                <span class="badge text-bg-secondary">Signed Out</span>
+                                <div class="small text-muted mt-1">{{ v.sign_out }}</div>
+                            {% else %}
+                                <span class="badge text-bg-success">Still Inside</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ v.visit_duration }}</td>
+                        <td>
+                            {% if not v.sign_out %}
+                                <form method="POST" action="{{ url_for('signout', visitor_id=v.id) }}">
+                                    <input type="hidden" name="redirect_to" value="{{ current_path }}">
+                                    <button
+                                        type="submit"
+                                        class="btn btn-sm btn-outline-danger"
+                                        onclick="return confirm('Mark this parent visitor as signed out?')"
+                                    >
+                                        Sign Out
+                                    </button>
+                                </form>
+                            {% else %}
+                                <span class="text-muted small">Completed</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="empty-state text-center shadow-sm">
+        <h4 class="mb-2">No visitor records matched</h4>
+        <p class="text-muted mb-3">
+            {% if active_filter_count %}
+                Try adjusting the filters or clear them to see all visits.
+            {% else %}
+                Sign in the first parent visitor to start building the log.
+            {% endif %}
+        </p>
+        <div class="d-flex justify-content-center flex-wrap gap-2">
+            <a href="{{ url_for('signin') }}" class="btn btn-dark">Sign In Parent</a>
+            {% if active_filter_count %}
+                <a href="{{ url_for('visitor_log') }}" class="btn btn-outline-secondary">Clear Filters</a>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}
+
+{% endblock %}
