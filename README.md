@@ -19,7 +19,7 @@ A Flask-based visitor management app for tracking parent visits, validating stud
 - Duplicate active-visit prevention for the same parent and student
 - Safer POST-based sign-out flow with visit duration tracking
 
-## Default Admin Credentials
+## Local Development Credentials
 - Username: `admin`
 - Password: `admin123`
 
@@ -32,6 +32,8 @@ $env:SECRET_KEY="your_secret_key"
 python app.py
 ```
 
+Hosted deployments now require `SECRET_KEY`, `ADMIN_USERNAME`, and `ADMIN_PASSWORD` to be set as environment variables.
+
 ## Setup
 
 1. Install dependencies:
@@ -43,7 +45,7 @@ python app.py
    python app.py
    ```
 3. Open `http://127.0.0.1:5000`
-4. Sign in with the admin credentials above
+4. Sign in with the local development credentials above
 
 ## Deployment
 
@@ -66,7 +68,21 @@ This project is easiest to deploy on `Railway` in its current form because it us
 5. Deploy the service.
 6. Open the generated Railway domain and sign in.
 
-The database file will be created automatically on first boot because `init_db()` runs when the app starts.
+The database file and table are created automatically when the app boots.
+
+### Railway Click Path
+
+1. Go to `railway.app` and sign in.
+2. Click `New Project`.
+3. Choose `Deploy from GitHub repo`.
+4. Select your `parents-log-book` repository.
+5. Open the new service.
+6. Go to `Variables` and add:
+   `SECRET_KEY`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `DATABASE_PATH`
+7. Go to `Settings` -> `Volumes`.
+8. Create a volume and mount it at `/data`.
+9. Trigger a redeploy.
+10. Visit your app URL and confirm `/health` returns a healthy response.
 
 ### Important SQLite Note
 

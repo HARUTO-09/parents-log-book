@@ -19,11 +19,43 @@ from flask import (
     url_for,
 )
 
+HOSTED_ENVIRONMENT_MARKERS = ("RAILWAY_ENVIRONMENT", "RAILWAY_PROJECT_ID", "RENDER", "PORT")
+LOCAL_DEV_SECRET_KEY = "local-dev-secret-key"
+LOCAL_DEV_ADMIN_USERNAME = "admin"
+LOCAL_DEV_ADMIN_PASSWORD = "admin123"
+
+
+def is_hosted_environment():
+    return any(os.environ.get(marker) for marker in HOSTED_ENVIRONMENT_MARKERS)
+
+
+def get_env_setting(name, default=None, required_in_hosted=False):
+    value = os.environ.get(name, default)
+    if required_in_hosted and is_hosted_environment() and not os.environ.get(name):
+        raise RuntimeError(f"{name} environment variable is required in hosted deployments.")
+    return value
+
+
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "visitorlog123")
-app.config["ADMIN_USERNAME"] = os.environ.get("ADMIN_USERNAME", "admin")
-app.config["ADMIN_PASSWORD"] = os.environ.get("ADMIN_PASSWORD", "admin123")
+app.secret_key = get_env_setting("SECRET_KEY", LOCAL_DEV_SECRET_KEY, required_in_hosted=True)
+app.config["ADMIN_USERNAME"] = get_env_setting(
+    "ADMIN_USERNAME",
+    LOCAL_DEV_ADMIN_USERNAME,
+    required_in_hosted=True,
+)
+app.config["ADMIN_PASSWORD"] = get_env_setting(
+    "ADMIN_PASSWORD",
+    LOCAL_DEV_ADMIN_PASSWORD,
+    required_in_hosted=True,
+)
 app.config["DATABASE_PATH"] = os.environ.get("DATABASE_PATH", "visitors.db")
+
+if is_hosted_environment():
+    app.config.update(
+        SESSION_COOKIE_SECURE=True,
+        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_SAMESITE="Lax",
+    )
 
 TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M"
 PHONE_PATTERN = re.compile(r"^\d{10}$")
@@ -630,6 +662,12 @@ def signout(visitor_id):
     return redirect(url_for("visitor_log"))
 
 
+init_db()
+
+
 if __name__ == "__main__":
-    init_db()
-    app.run(debug=True)
+    app.run(
+        host="0.0.0.0",
+        port=int(os.environ.get("PORT", "5000")),
+        debug=os.environ.get("FLASK_DEBUG") == "1",
+    )
